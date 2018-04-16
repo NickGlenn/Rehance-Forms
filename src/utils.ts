@@ -9,7 +9,7 @@ export function isFunc(val: any): boolean {
  * Returns true if the given value is a function.
  */
 export function isPromise(val: any): boolean {
-  return ( !!val && typeof val.then === "function" );
+  return (!!val && typeof val.then === "function");
 }
 
 /**
@@ -17,4 +17,11 @@ export function isPromise(val: any): boolean {
  */
 export function capitalize(str: string): string {
   return (str.charAt(0).toUpperCase() + str.slice(1));
+}
+
+/**
+ * Returns a random key using the given key prefix.
+ */
+export function createKey(prefix: string): string {
+  return prefix + "_" + Date.now() + "_" + Math.round(Math.random() * 100);
 }

@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
     "jsx": "react",
     "target": "es5",
     "lib": [
