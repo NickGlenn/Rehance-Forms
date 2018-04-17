@@ -153,10 +153,17 @@ export class Input implements FieldState<string, TextFieldPropType> {
    * Handle onChange events for the input field.
    */
   onChange = (ev: string | FormEvent<any>) => {
+    let hasErrors = (this.errors.length > 0);
+
     if (typeof ev === "string") {
-      this.setValue(ev);
+      this.setValue(ev, hasErrors);
     } else {
-      this.setValue(ev.currentTarget.value);
+      this.setValue(ev.currentTarget.value, hasErrors);
+    }
+
+    if (hasErrors) {
+      this.validate();
+      this._form.forceUpdate();
     }
   }
 
@@ -165,6 +172,7 @@ export class Input implements FieldState<string, TextFieldPropType> {
    */
   onBlur = () => {
     this._focused = false;
+    this.validate();
   }
 
   /**
