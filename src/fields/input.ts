@@ -1,53 +1,34 @@
 import { FormEvent } from "react";
 import { FieldState, FormDelegate } from "../index";
-import { ValidationRule, validate, isRequired, isEmail } from "../validation";
+import { ValidationRule, validate, required, requiredIf, matches } from "../validation";
 
 export type TextFieldPropType =
   & React.InputHTMLAttributes<HTMLInputElement>
   & { ref?(el: HTMLInputElement): void }
 
-export type InputTypeAttribute =
-  | "text"
-  | "email"
-  | "password"
-  | "tel"
-  | "number";
-
 /**
  * Manages state for a standard, text-based input field.
  */
-export class InputState implements FieldState<string, TextFieldPropType> {
+export class Input implements FieldState<string, TextFieldPropType> {
 
   protected _form: FormDelegate;
-  protected _name: string;
+  protected _initialValue: string;
   protected _value: string;
   protected _focused: boolean = false;
   protected _dirty: boolean = false;
-  protected _element: HTMLInputElement;
   protected _errors: string[] = [];
-  protected _validate: ValidationRule;
   protected _rules: ValidationRule<string>[] = [];
 
-  public type: InputTypeAttribute;
+  public type: string;
 
   /**
    * Creates the text input state object and provides it with a delegate.
    */
-  constructor(form: FormDelegate, name: string, type: InputTypeAttribute = "text") {
+  constructor(form: FormDelegate, type: string = "text", value: string = "") {
     this._form = form;
-    this._name = name;
     this.type = type;
-
-    if (type === "email") {
-      this._rules.push(isEmail);
-    }
-  }
-
-  /**
-   * The name of the field.
-   */
-  get name(): string {
-    return this._name;
+    this._initialValue = value;
+    this._value = value;
   }
 
   /**
@@ -58,25 +39,17 @@ export class InputState implements FieldState<string, TextFieldPropType> {
   }
 
   /**
-   * Returns the first error message for the field or `null` if there are no errors.
+   * Returns the first error message for the input or `null` if there are no errors.
    */
   get error(): string {
     return (this._errors.length === 0 ? null : this._errors[0]);
   }
 
   /**
-   * Returns all of the error messages for the field.
+   * Returns all of the error messages for the input field.
    */
   get errors(): string[] {
     return this._errors;
-  }
-
-  /**
-   * Whether or not this field is disabled based on the validation state
-   * of the field.
-   */
-  get isDisabled(): boolean {
-    return !this.isValid;
   }
 
   /**
@@ -105,60 +78,67 @@ export class InputState implements FieldState<string, TextFieldPropType> {
   }
 
   /**
-   * Adds the isRequired rule.
+   * Is true when the value has been changed from the initial value of the field.
    */
-  required = () => {
-    return this.addRule(isRequired);
+  get hasChanges(): boolean {
+    return (this._initialValue !== this._value);
   }
 
   /**
-   * Adds a requiredIf rule.
+   * Add one or more validation rules to the input.
    */
-  requiredIf = () => {
+  rules = (...rules: ValidationRule<string>[]) => {
+    this._rules = this._rules.concat(rules);
+    return this;
   }
 
   /**
-   * Add a validation rule to the input state.
+   * Adds the "required" validation rule to the input.
    */
-  addRule = (rule: ValidationRule<string>) => {
-    if (this._rules.indexOf(rule) === -1) {
-      this._rules.push(rule);
-    }
+  required = (message?: string) => {
+    this._rules.push(required(message));
+    return this;
+  }
 
+  /**
+   * Adds the "requiredIf" validation rule to the input.  This is useful
+   * if you want this field to only be required based on a conditional statement.
+   */
+  requiredIf = (check: (val: string) => boolean, message?: string) => {
+    this._rules.push(requiredIf<string>(check, message));
+    return this;
+  }
+
+  /**
+   * Adds the "matches" validation rule to the input.  On change, the value will
+   * be compared against the given regular expression.  This rule is skipped if
+   * the input is empty, so make sure you add the required() rule if you want
+   * the field to be required.
+   */
+  matches = (pattern: RegExp, message?: string) => {
+    this._rules.push(matches(pattern, message));
     return this;
   }
 
   /**
    * Validate the field using the set validation rules and the current value.
    */
-  validate = (): boolean => {
-    this._errors = validate(this._name, this.value, this._rules, {});
-    return (this._errors.length > 0);
+  validate = () => {
+    this._errors = validate(this._value, this._rules);
+    return this;
   }
 
   /**
    * Set the value of the field, with support for optionally bypassing re-renders.
    */
-  setValue = (newValue: string, update: boolean = true) => {
+  setValue = (newValue: string, dontUpdate?: boolean) => {
     this._value = newValue;
     this.validate();
-    if (update) this._form.forceUpdate();
+    if (!dontUpdate) {
+      this._form.forceUpdate();
+    }
+
     return this;
-  }
-
-  /**
-   * Set the default value for the input.
-   */
-  setDefault = (value: string) => {
-    return this.setValue(value, true);
-  }
-
-  /**
-   * Set the reference to the element that this field is attached to.  Used for the
-   * the ref prop on <input> fields.
-   */
-  setElement = (c: any) => {
-    this._element = c;
   }
 
   /**
@@ -193,8 +173,6 @@ export class InputState implements FieldState<string, TextFieldPropType> {
   get props(): TextFieldPropType {
     return {
       type: this.type,
-      disabled: this.isDisabled,
-      ref: this.setElement,
       value: this._value,
       onFocus: this.onFocus,
       onChange: this.onChange,

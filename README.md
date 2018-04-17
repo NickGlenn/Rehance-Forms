@@ -1,6 +1,6 @@
 # Rehance-Forms
 
-This library aims to ease the pain of creating forms in React.  It offers support for handling validation and interaction states for both individual fields and the form as a whole.  It is built to work with both native `<input>` elements or custom ones.
+This library aims to ease the pain of creating forms in React.  It offers tools for handling validation and interaction states for both single fields or entire forms.  It supports native `<input>`, but can easily be used with custom components.
 
 ## Getting Started
 
@@ -12,32 +12,40 @@ npm i -S rehance-forms
 
 ## Quick Start
 
-Rather than creating a higher-order components or relying on context and render props, RehanceForms chooses to expose a new base class for your form components.  This decision was made to allow for your form to have complete control over the fields within it and any additional state you may need to track (like a multi-step form or image upload).
-
 ```tsx
-import { FormComponent } from "rehance-forms";
+import * as React from "react";
+import { check, email, password, toggle } from "rehance-forms";
 
-export class LoginForm extends FormComponent {
+export class LoginForm extends React.Component {
 
-  defineFields({ text, checkbox, group }, props) {
-    this.email = text({ type: "email" });
-    this.password = text({ type: "password" });
-    this.rememberMe = checkbox({ required: false });
+  email = email(this).required();
+  password = password(this).required();
+  rememberMe = toggle(this);
+
+  get isValid() {
+    return check(
+      this.email.isValid,
+      this.password.isValid
+    );
   }
 
   submitForm = () => {
-    console.log("form values: ", this.getValues());
+    // implement form submit logic
   }
 
   render() {
     return (
       <div>
-        <input {...this.email.props} placeholder="Email Address" />
-        <span>{this.email.error}</span>
-        <input {...this.password.props} placeholder="Password" />
-        <span>{this.password.error}</span>
+        <div>
+          <input {...this.email.props} placeholder="Email Address" />
+          <span>{this.email.error}</span>
+        </div>
+        <div>
+          <input {...this.password.props} placeholder="Password" />
+          <span>{this.password.error}</span>
+        </div>
         <input {...this.rememberMe.props} />
-        <button disabled={!this.isValid()} onClick={this.submitForm}>
+        <button disabled={!this.isValid} onClick={this.submitForm}>
           Submit
         </button>
       </div>
@@ -47,74 +55,56 @@ export class LoginForm extends FormComponent {
 }
 ```
 
+Rather than creating a higher-order components or relying on context and render props, this library chooses to expose several classes for managing specific types of state.
+
 ### Defining Fields
 
-The `defineFields()` method is invoked during the construction of the form component.  It is given two arguments:
-
-1. An object containing factory methods for creating new field types.
-2. The props that were passed to the component on construction.
-
-Once the fields are created, you should store them on the component itself for reference later.  The type of field returned is dependent on the factory function called.  The available factories are `text()`, `checkbox()`, `radio()`, `select()`, `textarea()` and `file()`.
-
-### Field Basics
-
-All fields have the following structure:
+If you're using Typescript or the Babel plugins for class properties, then you can simply define them like in the ["quick start" example above](#quick-start).  Otherwise, you'll need to define your fields in the `constructor()` method of your `Component` class.  If you wish to use stateless functions for your form, you can use the `form()` factory component.
 
 ```tsx
-interface Field<ValueType, PropType> {
-  readonly key: string;
-  readonly value: ValueType;
-  readonly error: string;
-  readonly errors: string[];
-  readonly isValid: boolean;
-  readonly isFocused: boolean;
-  readonly isDirty: boolean;
-  readonly props: PropType;
-}
-```
+// Property Declaration
+class MyForm extends React.Component {
 
-| Property      | Description                                                                                                    |
-| ------------- | -------------------------------------------------------------------------------------------------------------- |
-| **key**       | The ID or key of the field.  The built-in field types generate this automatically.                             |
-| **value**     | The current value of the field (by state, not by element).                                                     |
-| **error**     | The first error of all errors for the field.  Will be `null` if no errors are set.                             |
-| **errors**    | An array containing all of the errors for the field.  Will be an empty array if there are currently no errors. |
-| **isValid**   | Is `true` when there are no errors on the field and the field has been validated.                              |
-| **isFocused** | Is `true` when the field is currently focused or active.                                                       |
-| **isDirty**   | Is `true` when the user has interacted with the field in some way.                                             |
-| **props**     | An auto-generated object containing the compatible props for the HTML component.                               |
+  myField = text(this).required();
+
+}
+
+// Constructor Declaration
+class MyForm extends React.Component {
+
+  constructor(props, context) {
+    super(props, context);
+    this.myField = text(this).required();
+  }
+
+}
+
+// HoC Declaration
+const MyForm = form(form => ({
+  myField: text(form).required(),
+}), props => {
+  return (
+    <input {...props.myField.props} />
+  );
+});
+```
 
 ### The `props` Property
 
-You may notice above that there is a `prop` property on fields that is marked as `readonly`.  This property is a getter that creates all of the necessary bindings and values for an HTML component.  By using the following syntax below, the `value` is automatically provided to the `<input>` element, along with `ref` bindings and the methods for `onFocus`, `onBlur`, `onChange`, etc...
+You may notice above that there is a `prop` property on some field types.  This property is a getter that creates all of the necessary bindings and values for an HTML component.  By using the following syntax below, the `value` is automatically provided to the `<input>` element, along with the event methods for `onFocus`, `onBlur`, and `onChange`.  This allows the field type to automatically handle the appropriate effects for interaction with the configured element or component.
 
 ```tsx
 <input {...this.myField.props}>
 ```
 
-### Checking Form Validity
+### Checking Field Validity
 
-You can check the validity of all of the fields bound to the form by using the `isValid()` method.  This can be useful for a number of things but is likely most useful for disabling the submit button on your form (as seen in the example above).
-
-```tsx
-render() {
-  return (
-    <div>
-      <input {...this.myRequiredField.props} />
-      <button disabled={!this.isValid()} onClick={this.submitForm}>
-        Submit
-      </button>
-    </div>
-  );
-}
-```
-
-You can also supply the `isValid()` method with an array of fields if you wish to check a specific selection of fields.  An example use case for this would be if you had a multi-step form and you wanted to ensure that the user didn't proceed to the next step until the current step was valid.
+All field types _should_ expose an `isValid` property or accessor.  The `isValid` property is used to determine the legitamacy of that single field type or its constituents.  This library also provides a `check()` method for checking the validity of multiple field types at once.  It should be noted that the higher-order component created by the `form()` utility provides an `isValid` property that contains the result of a `check()` call on its fields.
 
 ```tsx
 render() {
-  const isStep1Valid = this.isValid([this.fullName, this.email]);
-  const isStep2Valid = this.isValid([this.favFood]);
+  const isStep1Valid = check(this.fullName, this.email);
+  const isStep2Valid = check(this.favFood);
 
   return (
     <div>
@@ -144,3 +134,41 @@ render() {
   );
 }
 ```
+
+## The `Input` Type
+
+Input element primarily* use the `Input` class for managing input state.
+
+> **Note:** Not all field types that use an `<input>` element use the `Input` class.  For example, the `Toggle` type is a specialized class for managing `boolean` states on `input[type=checkbox]` elements.
+
+### Properties
+
+| Property      | Description                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **value**     | The current value of the input (by state, not by element).                                                           |
+| **error**     | The first error of all errors for the input.  Will be `null` if no errors are set.                                   |
+| **errors**    | An array containing all of the errors for the input field.  Will be an empty array if there are currently no errors. |
+| **isValid**   | Is `true` when there are no errors on the input and the input has been validated.                                    |
+| **isFocused** | Is `true` when the input is currently focused or active.                                                             |
+| **isDirty**   | Is `true` when the user has interacted with the input in some way.                                                   |
+| **props**     | An auto-generated object containing the compatible props for an `HTMLInputElement` component.                        |
+
+### Adding Validation Rules
+
+TBD
+
+## The `Toggle` Type
+
+TBD
+
+## The `Group` Type
+
+TBD
+
+## The `List` Type
+
+TBD
+
+## The `Collection` Type
+
+TBD

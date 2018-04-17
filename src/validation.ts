@@ -1,71 +1,90 @@
 export interface ValidationRule<ValueType = any> {
-  (value: ValueType): ValidationRuleResult;
+  (value: ValueType): null | string;
 }
-
-export type ValidationRuleResult = {
-  key: string;
-  valid: boolean;
-  default: string;
-};
-
-export type StringMap = {
-  [key: string]: string;
-};
 
 /**
  * Checks a given value against an array of validation rules and compiles a list of
- * error messages using the given messages object.
+ * error messages.
  */
 export function validate<ValueType = any>(
-  name: string,
   value: ValueType,
   rules: ValidationRule<ValueType>[],
-  messages: StringMap,
 ): string[] {
   let errors: string[] = [];
 
   for (let rule of rules) {
-    let result = rule(value);
-    if (result && !result.valid) {
-      // get the message for the error
-      let msg = (messages[name + "." + result.key] || messages[result.key] || result.default);
-      errors.push(msg);
-    }
+    let error = rule(value);
+    if (error) errors.push(error);
   }
 
   return errors;
 }
 
 /**
- * Performs a validation check for truthy values.
+ * Validation check for truthy values.
  */
-export function isRequired(value: string): ValidationRuleResult {
-  return {
-    key: "required",
-    valid: (!!value),
-    default: "This field is required.",
+export function required(
+  message: string = "This field is required.",
+): ValidationRule<boolean | number | string> {
+  return function (value) {
+    if (!!value) return null;
+    return message;
   };
 }
 
 /**
- * Returns a new validation rule that compares a given string value against
- * the given regex pattern.
+ * Validate against a condition within the given closure.
  */
-export function matchesPattern(pattern: RegExp, key: string, defaultMessage: string): ValidationRule<string> {
+export function requiredIf<ValueType = any>(
+  check: (value: ValueType) => boolean,
+  message: string = "This field is required.",
+): ValidationRule<ValueType> {
   return function (value) {
-    return {
-      key: key,
-      valid: (!pattern.test(value)),
-      default: defaultMessage,
-    };
+    if (check(value)) return null;
+    return message;
+  };
+}
+
+/**
+ * Validates a value against the given regular expression.  This rule is skipped
+ * if an empty value is provided.
+ */
+export function matches(
+  pattern: RegExp,
+  message: string = "This field does not match the expected pattern.",
+): ValidationRule<string> {
+  return function (value) {
+    if (!value || pattern.test(value)) return null;
+    return message;
   }
 }
 
 /**
  * Performs a validation check to ensure that the given value is an email.
  */
-export const isEmail = matchesPattern(
-  /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-  "email",
-  "This field must be a valid must be a email address."
-);
+export function email(
+  message: string = "This field must be a valid must be a email address.",
+): ValidationRule<string> {
+  return matches(
+    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+    message,
+  );
+}
+
+/**
+ * Validation check for enforcing a min length requirement for a value.
+ */
+// export function minLengthOf(
+//   limit: number,
+//   message: string = "This field must contain at least {min}.",
+// ): ValidationRule<{ length: number }> {
+//   return function (value) {
+//     if ((!p.max || value.length <= p.max) && (!p.min || value.length >= p.min)) {
+//       return null;
+//     }
+
+//     return message.replace(/\{(min|max)\}/g, (_, m) => {
+//       return (<any>p)[m] || 0;
+//     });
+//   };
+// }
