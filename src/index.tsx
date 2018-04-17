@@ -10,6 +10,8 @@ export * from "./fields/toggle";
 export * from "./fields/group";
 export * from "./fields/list";
 export * from "./fields/collection";
+export * from "./validation";
+export * from "./hoc";
 
 export interface FormDelegate {
   forceUpdate(): void;

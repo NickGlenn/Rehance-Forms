@@ -16,6 +16,13 @@ export class Group<FieldTypes = any> {
   }
 
   /**
+   * Returns a copy of the fields object.
+   */
+  get fields(): FieldGroupType<FieldTypes> {
+    return Object.assign({}, this._fields);
+  }
+
+  /**
    * Gets all of the field values as single object.
    */
   get value(): FieldTypes {
