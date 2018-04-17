@@ -1,4 +1,4 @@
-import { FormDelegate } from "..";
+import { FormDelegate, check } from "..";
 
 export interface FieldFactory<FieldType, FieldValueType> {
   (form: FormDelegate, value: FieldValueType): FieldType;
@@ -36,13 +36,7 @@ export class List<FieldType extends { value: FieldValueType, isValid: boolean } 
    * Is true when all fields in the list are considered valid.
    */
   get isValid(): boolean {
-    for (let field of this._items) {
-      if (!field.isValid) {
-        return false;
-      }
-    }
-
-    return true;
+    return check(...this._items);
   }
 
   /**

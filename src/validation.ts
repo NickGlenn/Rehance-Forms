@@ -3,6 +3,17 @@ export interface ValidationRule<ValueType = any> {
 }
 
 /**
+ * Check multiple field types at once and return true if all are valid.
+ */
+export function check(...fields: { isValid: boolean }[]): boolean {
+  for (let field of fields) {
+    if (!field.isValid) return false;
+  }
+
+  return true;
+}
+
+/**
  * Checks a given value against an array of validation rules and compiles a list of
  * error messages.
  */

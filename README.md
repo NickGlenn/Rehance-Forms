@@ -14,12 +14,12 @@ npm i -S rehance-forms
 
 ```tsx
 import * as React from "react";
-import { check, email, password, toggle } from "rehance-forms";
+import { check, input, toggle } from "rehance-forms";
 
 export class LoginForm extends React.Component {
 
-  email = email(this).required();
-  password = password(this).required();
+  email = input.email(this).required();
+  password = input.password(this).required();
   rememberMe = toggle(this);
 
   get isValid() {
@@ -65,7 +65,7 @@ If you're using Typescript or the Babel plugins for class properties, then you c
 // Property Declaration
 class MyForm extends React.Component {
 
-  myField = text(this).required();
+  myField = input.text(this).required();
 
 }
 
@@ -74,14 +74,14 @@ class MyForm extends React.Component {
 
   constructor(props, context) {
     super(props, context);
-    this.myField = text(this).required();
+    this.myField = input.text(this).required();
   }
 
 }
 
 // HoC Declaration
 const MyForm = form(form => ({
-  myField: text(form).required(),
+  myField: input.text(form).required(),
 }), props => {
   return (
     <input {...props.myField.props} />
