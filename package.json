@@ -5,14 +5,28 @@
   "main": "dist/index.js",
   "jsnext:main": "dist/index.es.js",
   "typings": "dist/index.d.ts",
+  "jest": {
+    "notify": true,
+    "testRegex": ".test\\.tsx?$",
+    "testURL": "http://localhost/",
+    "setupFiles": [],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ]
+  },
   "scripts": {
     "preversion": "npm test",
     "version": "npm run build",
     "clean": "rm -rf dist/",
     "build": "rollup -c",
     "watch": "npm run build -- --watch",
-    "test": "echo 'No tests available yet';",
-    "tdd": "npm run watch | npm run test -- --watch",
+    "test": "jest",
+    "tdd": "npm run test -- --watch",
     "prepare": "npm run clean && npm run build && npm run test"
   },
   "dependencies": {
@@ -21,12 +35,15 @@
   },
   "devDependencies": {
     "@types/events": "^1.2.0",
+    "@types/jest": "^23.3.13",
     "@types/node": "^10.7.1",
     "@types/react": "^16.4.11",
+    "jest": "^24.0.0",
     "rollup": "^0.51.8",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-typescript2": "^0.8.4",
     "rollup-watch": "^4.3.1",
+    "ts-jest": "^23.10.5",
     "typescript": "^2.9.2"
   },
   "repository": {
