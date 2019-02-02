@@ -1,10 +1,10 @@
-import { NodeBase } from "./BaseNode";
+import { BaseNode } from "./BaseNode";
 
 /**
  * A value node is a node that simply contains ANY value and conforms to the
  * the same requirements of all other node types.
  */
-export class ValueNode<Value = any> extends NodeBase<Value> {
+export class ValueNode<Value = any> extends BaseNode<Value> {
 
   /**
    * The stored value that the value node represents.  Altering this value does
@@ -16,7 +16,7 @@ export class ValueNode<Value = any> extends NodeBase<Value> {
   /**
    * Sets up the initial state for the value node.
    */
-  constructor(parent: null | NodeBase<unknown>, initialValue: Value) {
+  constructor(parent: null | BaseNode<unknown>, initialValue: Value) {
     super(parent, initialValue);
 
     this.value = initialValue;
@@ -34,7 +34,7 @@ export class ValueNode<Value = any> extends NodeBase<Value> {
    * Returns true if the current value and initial value are no longer referentially equal.
    */
   public get changed(): boolean {
-    return (this.value !== this._initialValue);
+    return (this.value !== this.initialValue);
   }
 
   /**
