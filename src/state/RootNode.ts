@@ -5,14 +5,4 @@ import { TrieNode } from "./TrieNode";
  */
 export class RootNode<Value extends object = any> extends TrieNode<Value> {
 
-  /**
-   * Set up the root node.
-   */
-  constructor(initialValue: Value) {
-    super(null, initialValue);
-
-    // The root node for the root node is just itself.
-    this._root = this;
-  }
-
 }

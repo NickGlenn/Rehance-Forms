@@ -1,4 +1,3 @@
-import { INode } from "./INode";
 import { RootNode } from "./RootNode";
 import { EventBus } from "../EventBus";
 import { randomRange } from "../utils";
@@ -7,7 +6,7 @@ import { randomRange } from "../utils";
  * An abstract class that acts as a root for all other node types, implementing the key methods
  * and properties that persist between the different types.
  */
-export abstract class BaseNode<Value> implements INode<Value> {
+export abstract class BaseNode<Value> {
 
   /**
    * The root node of the state trie that this node belongs to.

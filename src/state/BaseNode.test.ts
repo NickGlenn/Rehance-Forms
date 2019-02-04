@@ -1,8 +1,8 @@
-import { BaseNode } from "./BaseNode";
+// import { BaseNode } from "./BaseNode";
 
-class TestNode extends BaseNode<string> {
-  public value: string;
-}
+// class TestNode extends BaseNode<string> {
+//   public value: string;
+// }
 
 describe("BaseNode", () => {
 

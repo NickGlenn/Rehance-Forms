@@ -27,7 +27,7 @@ export class ValueNode<Value = any> extends BaseNode<Value> {
    */
   public update(value: Value): void {
     this.value = value;
-    this.triggerUpdateEvent();
+    // this.triggerUpdateEvent();
   }
 
   /**

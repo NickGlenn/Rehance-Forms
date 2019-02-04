@@ -12,7 +12,7 @@ export type NodeMap<Source extends object> = {
  * A trie node represents an object, where various keys may represent value,
  * collection or other trie nodes.
  */
-export class TrieNode<Source extends object = object> extends BaseNode<Source> {
+export class TrieNode<Source extends object = object> extends BaseNode<Partial<Source>> {
 
   /**
    * The child nodes of this node. An important note:  Modifying this value directly
@@ -27,6 +27,19 @@ export class TrieNode<Source extends object = object> extends BaseNode<Source> {
    */
   constructor(parent: null | BaseNode<unknown>, initialValue: Source) {
     super(parent, initialValue);
+  }
+
+  /**
+   * Walks the trie and compiles the values for each child node into a map.
+   */
+  public get value(): Partial<Source> {
+    let output: Partial<Source> = {};
+
+    for (let key in this.children) {
+      output[key] = this.children[key].value;
+    }
+
+    return output;
   }
 
 }

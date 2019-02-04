@@ -5,7 +5,7 @@ import { TrieNode } from "./TrieNode";
  * A collection node is a list of trie nodes and maps directly to a list of
  * objects like `[{}, {}, {}]`.
  */
-export class CollectionNode<Item extends object = any> extends BaseNode<Item[]> {
+export class CollectionNode<Item extends object = any> extends BaseNode<Partial<Item>[]> {
 
   /**
    * The child nodes of this node. An important note:  Modifying this value directly
@@ -13,14 +13,14 @@ export class CollectionNode<Item extends object = any> extends BaseNode<Item[]> 
    * sure to use the appropriate mutation methods if you want updates to be broadcasted
    * for you or trigger an update manually with `triggerUpdateEvent()`.
    */
-  public children: TrieNode<Item>[];
+  public children: TrieNode<Partial<Item>>[];
 
   /**
    * Walks the collection and gathers the values of all contained nodes into
    * an array of object literals.
    */
-  public get value(): Item[] {
-    let output: Item[] = [];
+  public get value(): Partial<Item>[] {
+    let output: Partial<Item>[] = [];
     for (let item of this.children) {
       output.push(item.value);
     }
@@ -34,7 +34,7 @@ export class CollectionNode<Item extends object = any> extends BaseNode<Item[]> 
   public append(data: Item): TrieNode<Item> {
     let node = new TrieNode<Item>(this, data);
     this.children.push(node);
-    this.broadcastUpdate();
+    // this.broadcastUpdate();
     return node;
   }
 
